@@ -23,38 +23,32 @@ class Poktan extends CI_Controller
         foreach ($result as $res) {
             switch ($res->tahap) {
                 case 'm1':
-                    if (is_array(unserialize(base64_decode($res->m1)))) {
-                        $r['daftar'] += 1;
-                        $r['belum'] += 0;
-                        $r['tidak'] += 0;
-                    } elseif ($res->m1 == 'false') {
+                    if ($res->m1 == 'false') {
                         $r['daftar'] += 0;
-                        $r['belum'] += 0;
                         $r['tidak'] += 1;
+                    } else {
+                        $r['daftar'] += 1;
+                        $r['tidak'] += 0;
                     }
                     break;
 
                 case 'm2':
-                    if ($res->m2 == 'true') {
-                        $r['daftar'] += 1;
-                        $r['belum'] = 0;
-                        $r['tidak'] = 0;
-                    } elseif ($res->m2 == 'false') {
-                        $r['daftar'] = 0;
-                        $r['belum'] = 0;
+                    if ($res->m2 == 'false') {
+                        $r['daftar'] += 0;
                         $r['tidak'] += 1;
+                    } else {
+                        $r['daftar'] += 1;
+                        $r['tidak'] += 0;
                     }
                     break;
 
                 case 'm3':
-                    if ($res->m3 = true) {
-                        $r['daftar'] += 1;
-                        $r['belum'] = 0;
-                        $r['tidak'] = 0;
-                    } elseif ($res->m3 = false) {
-                        $r['daftar'] = 0;
-                        $r['belum'] = 0;
+                    if ($res->m3 == 'false') {
+                        $r['daftar'] += 0;
                         $r['tidak'] += 1;
+                    } else {
+                        $r['daftar'] += 1;
+                        $r['tidak'] += 0;
                     }
                     break;
             }
@@ -182,16 +176,10 @@ class Poktan extends CI_Controller
         $this->db->where(Array('poktan' => $this->input->post('poktan')));
         $sql = $this->db->get()->result_array();
         for ($i=0; $i < count($sql); $i++) {
-            $sql[$i]['m1'] = unserialize(base64_decode($sql[$i]['m1']));
-            $sql[$i]['m2'] = unserialize(base64_decode($sql[$i]['m2']));
-            $sql[$i]['m3'] = unserialize(base64_decode($sql[$i]['m3']));
+            if ($sql[$i]['m1'] != null && $sql[$i]['m1'] != 'false') $sql[$i]['m1'] = unserialize(base64_decode($sql[$i]['m1']));
+            if ($sql[$i]['m2'] != null && $sql[$i]['m2'] != 'false') $sql[$i]['m2'] = unserialize(base64_decode($sql[$i]['m2']));
+            if ($sql[$i]['m3'] != null && $sql[$i]['m3'] != 'false') $sql[$i]['m3'] = unserialize(base64_decode($sql[$i]['m3']));
         }
-        // foreach ($sql as $k) {
-        //     $sql[$k]['m1'] = 'sa';
-        // }
-        // $sql = $this->ArrayReplace($sql, 'm1', 'dsa');
-        // $sql['m1'] = unserialize(base64_decode($sql['m1']));
-        // print_r($sql[0]);
         echo json_encode($sql);
     }
 }
