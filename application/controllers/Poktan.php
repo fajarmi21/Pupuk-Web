@@ -182,4 +182,24 @@ class Poktan extends CI_Controller
         }
         echo json_encode($sql);
     }
+
+    public function usulanU()
+    {
+        $this->db->trans_begin();
+            $id[] = $this->input->post('id');
+            foreach ($this->input->post('id') as $key) {
+                $this->db->update('tb_usulan', array('status_poktan' => "true"), array('id_petani' => $key));
+            }
+        $this->db->trans_complete();
+        if ($this->db->trans_status() === TRUE) {
+            $this->db->trans_commit();
+            $r['status'] = '1';
+            $r['message'] = 'update successfully';
+        } else {
+            $this->db->trans_rollback();
+            $r['status'] = '0';
+            $r['message'] = 'update unsuccessfully';
+        }
+        echo json_encode($r);
+    }
 }
