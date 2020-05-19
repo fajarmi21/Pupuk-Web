@@ -11,7 +11,7 @@
  Target Server Version : 50724
  File Encoding         : 65001
 
- Date: 29/04/2020 14:09:45
+ Date: 19/05/2020 08:55:47
 */
 
 SET NAMES utf8mb4;
@@ -58,7 +58,8 @@ DROP TABLE IF EXISTS `tb_level`;
 CREATE TABLE `tb_level`  (
   `id_level` int(11) NOT NULL AUTO_INCREMENT,
   `level` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
-  PRIMARY KEY (`id_level`) USING BTREE
+  PRIMARY KEY (`id_level`) USING BTREE,
+  INDEX `level`(`level`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
@@ -66,9 +67,9 @@ CREATE TABLE `tb_level`  (
 -- ----------------------------
 INSERT INTO `tb_level` VALUES (1, 'ADMIN');
 INSERT INTO `tb_level` VALUES (2, 'DISTRIBUTOR');
-INSERT INTO `tb_level` VALUES (3, 'PPL');
-INSERT INTO `tb_level` VALUES (4, 'POKTAN');
 INSERT INTO `tb_level` VALUES (5, 'PETANI');
+INSERT INTO `tb_level` VALUES (4, 'POKTAN');
+INSERT INTO `tb_level` VALUES (3, 'PPL');
 
 -- ----------------------------
 -- Table structure for tb_petani
@@ -84,8 +85,15 @@ CREATE TABLE `tb_petani`  (
   `sektor` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
   `luas_lahan` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
   `tahap` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
-  PRIMARY KEY (`id_petani`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 364 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
+  PRIMARY KEY (`id_petani`) USING BTREE,
+  INDEX `tb_petani_ibfk_1`(`id_desa`) USING BTREE,
+  INDEX `id_kelompok`(`id_kelompok`) USING BTREE,
+  INDEX `nama_petani`(`nama_petani`) USING BTREE,
+  INDEX `sektor`(`sektor`) USING BTREE,
+  CONSTRAINT `tb_petani_ibfk_1` FOREIGN KEY (`id_desa`) REFERENCES `tb_desa` (`kode_desa`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  CONSTRAINT `tb_petani_ibfk_2` FOREIGN KEY (`id_kelompok`) REFERENCES `tb_poktan` (`id_poktan`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  CONSTRAINT `tb_petani_ibfk_3` FOREIGN KEY (`sektor`) REFERENCES `tb_sektor` (`jenis_tanaman`) ON DELETE NO ACTION ON UPDATE NO ACTION
+) ENGINE = InnoDB AUTO_INCREMENT = 339 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tb_petani
@@ -424,9 +432,6 @@ INSERT INTO `tb_petani` VALUES (334, '3506222001', 'K003', '3518042708850003', '
 INSERT INTO `tb_petani` VALUES (335, '3506222001', 'K003', '3506220601770003', 'Abu Katimin', 'Rt 001 Rw 002 Dsn. Kamal Desa Banyakan', 'tanaman pangan', '0.5', NULL);
 INSERT INTO `tb_petani` VALUES (337, '3506222001', 'K003', '3506220107830078', 'Moh. Rohim', 'Rt 002 Rw 002 Dsn. Kamal Desa Banyakan', 'tanaman pangan', '0.25', NULL);
 INSERT INTO `tb_petani` VALUES (338, '3506222001', 'K003', '3506220611870001', 'Ari Dwi Purnama', 'Rt 001 Rw 002 Dsn. Kamal Desa Banyakan', 'tanaman pangan', '0.5', NULL);
-INSERT INTO `tb_petani` VALUES (360, '3506222001', NULL, '', '', '', '', '', NULL);
-INSERT INTO `tb_petani` VALUES (362, '3506222001', NULL, '', '', '', '', '', NULL);
-INSERT INTO `tb_petani` VALUES (363, '3506222001', 'K004', '3666643336668586', 'fajar', 'kediri', 'tanaman pangan', '1', NULL);
 
 -- ----------------------------
 -- Table structure for tb_poktan
@@ -435,7 +440,8 @@ DROP TABLE IF EXISTS `tb_poktan`;
 CREATE TABLE `tb_poktan`  (
   `id_poktan` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
   `poktan` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
-  PRIMARY KEY (`id_poktan`) USING BTREE
+  PRIMARY KEY (`id_poktan`) USING BTREE,
+  INDEX `poktan`(`poktan`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
@@ -476,8 +482,8 @@ INSERT INTO `tb_poktan` VALUES ('K032', 'SIDODADI II');
 INSERT INTO `tb_poktan` VALUES ('K033', 'SIDODADI III');
 INSERT INTO `tb_poktan` VALUES ('K034', 'SRI REJEKI');
 INSERT INTO `tb_poktan` VALUES ('K035', 'SUBUR MAKMUR');
-INSERT INTO `tb_poktan` VALUES ('K036', 'SUMBER AYEM 2');
 INSERT INTO `tb_poktan` VALUES ('K037', 'SUMBER AYEM');
+INSERT INTO `tb_poktan` VALUES ('K036', 'SUMBER AYEM 2');
 INSERT INTO `tb_poktan` VALUES ('K038', 'SUMBER MULYO I');
 INSERT INTO `tb_poktan` VALUES ('K039', 'SUMBER MULYO II');
 INSERT INTO `tb_poktan` VALUES ('K040', 'SUMBER PANGAN');
@@ -503,7 +509,11 @@ CREATE TABLE `tb_pupuk`  (
   `id_distributor` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
   `id_sektor` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
   `nama_pupuk` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
-  PRIMARY KEY (`id_pupuk`) USING BTREE
+  PRIMARY KEY (`id_pupuk`) USING BTREE,
+  INDEX `id_sektor`(`id_sektor`) USING BTREE,
+  INDEX `id_distributor`(`id_distributor`) USING BTREE,
+  CONSTRAINT `tb_pupuk_ibfk_1` FOREIGN KEY (`id_sektor`) REFERENCES `tb_sektor` (`id_sektor`) ON DELETE NO ACTION ON UPDATE NO ACTION,
+  CONSTRAINT `tb_pupuk_ibfk_2` FOREIGN KEY (`id_distributor`) REFERENCES `tb_distributor` (`id_distributor`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
@@ -548,7 +558,8 @@ CREATE TABLE `tb_sektor`  (
   `id_sektor` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
   `jenis_tanaman` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
   `nama_tanaman` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
-  PRIMARY KEY (`id_sektor`) USING BTREE
+  PRIMARY KEY (`id_sektor`) USING BTREE,
+  INDEX `jenis_tanaman`(`jenis_tanaman`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
@@ -567,17 +578,20 @@ CREATE TABLE `tb_user`  (
   `email` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
   `password` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
   `level` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
-  PRIMARY KEY (`id`) USING BTREE
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `tb_user_ibfk_1`(`level`) USING BTREE,
+  INDEX `username`(`username`) USING BTREE,
+  CONSTRAINT `tb_user_ibfk_1` FOREIGN KEY (`level`) REFERENCES `tb_level` (`level`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tb_user
 -- ----------------------------
-INSERT INTO `tb_user` VALUES (1, 'KAMAL II', 'fajar@gmail.com', 'kediri1717', '4');
-INSERT INTO `tb_user` VALUES (2, 'Wahyu Krisdiantoro', 'fajarmilitan@gmail.com', 'user', '5');
-INSERT INTO `tb_user` VALUES (3, 'Marwi', 'marwi@gmail.com', 'user', '5');
-INSERT INTO `tb_user` VALUES (4, 'Suprihatin', 'supri@gmail.com', 'user', '5');
-INSERT INTO `tb_user` VALUES (5, 'fajar', 'fajarmi@gmail.com', 'user', '5');
+INSERT INTO `tb_user` VALUES (1, 'KAMAL II', 'fajar@gmail.com', 'kediri1717', 'ADMIN');
+INSERT INTO `tb_user` VALUES (2, 'Wahyu Krisdiantoro', 'fajarmilitan@gmail.com', 'user', 'PETANI');
+INSERT INTO `tb_user` VALUES (3, 'Marwi', 'marwi@gmail.com', 'user', 'PETANI');
+INSERT INTO `tb_user` VALUES (4, 'Suprihatin', 'supri@gmail.com', 'user', 'PETANI');
+INSERT INTO `tb_user` VALUES (5, 'fajar', 'fajarmi@gmail.com', 'user', 'PETANI');
 
 -- ----------------------------
 -- Table structure for tb_usulan
@@ -585,22 +599,23 @@ INSERT INTO `tb_user` VALUES (5, 'fajar', 'fajarmi@gmail.com', 'user', '5');
 DROP TABLE IF EXISTS `tb_usulan`;
 CREATE TABLE `tb_usulan`  (
   `id_usulan` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
-  `id_petani` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
-  `luas_lahan` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+  `id_petani` int(11) NULL DEFAULT NULL,
   `m1` blob NULL,
   `m2` blob NULL,
   `m3` blob NULL,
-  `status_poktan` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
-  `status_ppl` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
-  `status_admin` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+  `status_poktan` blob NULL,
+  `status_ppl` blob NULL,
+  `status_admin` blob NULL,
   `keterangan` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
-  `timestamp` datetime(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0) ON UPDATE CURRENT_TIMESTAMP(0),
-  PRIMARY KEY (`id_usulan`) USING BTREE
+  `timestamp` timestamp(0) NOT NULL DEFAULT CURRENT_TIMESTAMP(0) ON UPDATE CURRENT_TIMESTAMP(0),
+  PRIMARY KEY (`id_usulan`) USING BTREE,
+  INDEX `id_petani`(`id_petani`) USING BTREE,
+  CONSTRAINT `FK_tb_usulan_tb_petani` FOREIGN KEY (`id_petani`) REFERENCES `tb_petani` (`id_petani`) ON DELETE NO ACTION ON UPDATE NO ACTION
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of tb_usulan
 -- ----------------------------
-INSERT INTO `tb_usulan` VALUES ('U001', '1', '100', 0x59546F784F6E747A4F6A4936496E4E6B496A747A4F6A4D36496D527A5953493766513D3D, NULL, NULL, NULL, NULL, NULL, NULL, '2020-04-12 20:12:16');
+INSERT INTO `tb_usulan` VALUES ('U001', 1, 0x59546F7A4F6E747A4F6A4936496E4E6B496A747A4F6A4D36496D527A59534937637A6F324F694A7A5A577430623349694F334D364E446F696347466B61534937637A6F784D546F69624856686331393163335673595734694F334D364D7A6F694D433431496A7439, NULL, NULL, NULL, NULL, NULL, NULL, '2020-05-18 03:50:59');
 
 SET FOREIGN_KEY_CHECKS = 1;
