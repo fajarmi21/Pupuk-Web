@@ -179,6 +179,10 @@ class Poktan extends CI_Controller
             if ($sql[$i]['m1'] != null && $sql[$i]['m1'] != 'false') $sql[$i]['m1'] = unserialize(base64_decode($sql[$i]['m1']));
             if ($sql[$i]['m2'] != null && $sql[$i]['m2'] != 'false') $sql[$i]['m2'] = unserialize(base64_decode($sql[$i]['m2']));
             if ($sql[$i]['m3'] != null && $sql[$i]['m3'] != 'false') $sql[$i]['m3'] = unserialize(base64_decode($sql[$i]['m3']));
+            
+            if ($sql[$i]['status_poktan'] != null) {
+                $sql[0]['status_poktan'] = unserialize(base64_decode($sql[0]['status_poktan']));
+            }
         }
         echo json_encode($sql);
     }
@@ -188,7 +192,13 @@ class Poktan extends CI_Controller
         $this->db->trans_begin();
             $id[] = $this->input->post('id');
             foreach ($this->input->post('id') as $key) {
-                $this->db->update('tb_usulan', array('status_poktan' => "true"), array('id_petani' => $key));
+                $sql = $this->db->get_where('tb_usulan', array('id_petani' => $key))->row('status_poktan');
+                $ar = array();
+                if ($sql != null) {
+                    $ar = unserialize(base64_decode($sql));
+                }
+                array_push($ar, "true");
+                $this->db->update('tb_usulan', array('status_poktan' => base64_encode(serialize($ar))), array('id_petani' => $key));
             }
         $this->db->trans_complete();
         if ($this->db->trans_status() === TRUE) {
