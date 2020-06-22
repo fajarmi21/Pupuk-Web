@@ -52,7 +52,13 @@ class Petani extends CI_Controller
             } else {
                 array_push($tahap, $ar);
             }
-            $this->db->update('tb_usulan', array($this->input->post('tahap') => base64_encode(serialize($tahap))), array('id_petani' => $id->id_petani));
+            $input =  array(
+                $this->input->post('tahap') => base64_encode(serialize($tahap)),
+                'status_poktan' => null,
+                'status_ppl' => null,
+                'status_admin' => null,
+            );
+            $this->db->update('tb_usulan', $input, array('id_petani' => $id->id_petani));
         } else {
             $last = $this->db->select('SUBSTRING(id_usulan, 2) as id', FALSE)
                 ->order_by('id_usulan', "desc")
@@ -88,6 +94,50 @@ class Petani extends CI_Controller
             $this->db->trans_rollback();
             $r['status'] = '0';
             $r['message'] = 'insert unsuccessfully';
+        }
+        echo json_encode($r);
+    }
+
+    public function usulanR()
+    {
+        $id = $this->db->get_where("tb_petani", array('nama_petani' => $this->input->post('petani')))->row();
+        $usul = $this->db->get_where("tb_usulan", array('id_petani' => $id->id_petani))->row();
+        $tahap = array();
+        $thp = $id->tahap;
+        $tahap = unserialize(base64_decode($usul->$thp));
+        echo json_encode(end($tahap));
+    }
+
+    public function usulanU()
+    {
+        $this->db->trans_begin();
+        $id = $this->db->get_where("tb_petani", array('nama_petani' => $this->input->post('petani')))->row();
+        $usul = $this->db->get_where("tb_usulan", array('id_petani' => $id->id_petani))->row();
+        $arF = array(
+            'sektor' => $this->input->post('sektor'),
+            'luas' => $this->input->post('luas'),
+            'urea' => $this->input->post('urea'),
+            'sp36' => $this->input->post('sp36'),
+            'za' => $this->input->post('za'),
+            'npk' => $this->input->post('npk'),
+            'organik' => $this->input->post('organik'),
+            'date' => $this->input->post('date'),
+        );
+        $tahap = array();
+        $thp = $id->tahap;
+        $tahap = unserialize(base64_decode($usul->$thp));
+        $x = array_search($this->input->post('dateF'), array_column($tahap, 'date'));
+        $tahap[$x] = $arF;
+        $this->db->update('tb_usulan', array($thp => base64_encode(serialize($tahap))), array('id_petani' => $id->id_petani));
+        $this->db->trans_complete();
+        if ($this->db->trans_status() === TRUE) {
+            $this->db->trans_commit();
+            $r['status'] = '1';
+            $r['message'] = 'update successfully';
+        } else {
+            $this->db->trans_rollback();
+            $r['status'] = '0';
+            $r['message'] = 'update unsuccessfully';
         }
         echo json_encode($r);
     }
