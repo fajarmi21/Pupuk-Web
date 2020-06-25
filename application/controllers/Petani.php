@@ -1,5 +1,8 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
+define('VENDOR', substr(FCPATH, 0, strpos(APPPATH, 'application/')) . "vendor/");
+require VENDOR . 'autoload.php';
+
 
 class Petani extends CI_Controller
 {
@@ -10,14 +13,23 @@ class Petani extends CI_Controller
     }
     public function index()
     {
-        $this->db->join("tb_usulan", "tb_petani.id_petani = tb_usulan.id_petani");
-        $this->db->join("tb_desa", "tb_petani.id_desa = tb_desa.kode_desa");
+        // $this->db->join("tb_usulan", "tb_petani.id_petani = tb_usulan.id_petani");
         $this->db->join('tb_poktan', 'tb_petani.id_kelompok = tb_poktan.id_poktan');
+        $this->db->join("tb_desa", "tb_poktan.id_desa = tb_desa.kode_desa");
         $this->db->where(array('nama_petani' => $this->input->post('nama_petani')));
-        $sql = $this->db->get("tb_petani")->row();
-        if ($sql->m1 != null && $sql->m1 != 'false') $sql->m1 = unserialize(base64_decode($sql->m1));
-        if ($sql->m2 != null && $sql->m2 != 'false') $sql->m2 = unserialize(base64_decode($sql->m2));
-        if ($sql->m3 != null && $sql->m3 != 'false') $sql->m3 = unserialize(base64_decode($sql->m3));
+        $sql = $this->db->get("tb_petani")->row_array();
+        $q = $this->db->get_where('tb_usulan', array('id_petani' => $sql['id_petani']))->row_array();
+        if ($q != null) {
+            $sql = array_merge($sql, $q);
+            if ($sql != null) {
+                if ($sql['m1'] != null && $sql['m1'] != 'false') $sql['m1'] = unserialize(base64_decode($sql['m1']));
+                if ($sql['m2'] != null && $sql['m2'] != 'false') $sql['m2'] = unserialize(base64_decode($sql['m2']));
+                if ($sql['m3'] != null && $sql['m3'] != 'false') $sql['m3'] = unserialize(base64_decode($sql['m3']));
+                if ($sql['status_poktan'] != null && $sql['status_poktan'] != 'false') {
+                    $sql['status_poktan'] = unserialize(base64_decode($sql['status_poktan']));
+                }
+            }
+        }
         echo json_encode($sql);
     }
 
@@ -80,7 +92,7 @@ class Petani extends CI_Controller
             $array = array(
                 'id_usulan' => $e,
                 'id_petani' => $id->id_petani,
-                $this->input->post('tahap') => base64_encode(serialize($ar))
+                $this->input->post('tahap') => base64_encode(serialize(array($ar)))
             );
             $this->db->insert('tb_usulan', $array);
         }
@@ -105,7 +117,10 @@ class Petani extends CI_Controller
         $tahap = array();
         $thp = $id->tahap;
         $tahap = unserialize(base64_decode($usul->$thp));
-        echo json_encode(end($tahap));
+        $tahap = end($tahap);
+        // $tx = array("luas_lahan" => $id->luas_lahan);
+        $tahap["luas_lahan"] = $id->luas_lahan;
+        echo json_encode($tahap);
     }
 
     public function usulanU()
@@ -162,5 +177,35 @@ class Petani extends CI_Controller
         // array_push($x, $sql->m1);
         // $sql->m1 = $x;
         echo json_encode($sql);
+    }
+
+    public function uji()
+    {
+        $this->db->join('tb_poktan', 'tb_petani.id_kelompok = tb_poktan.id_poktan');
+        $this->db->join("tb_desa", "tb_poktan.id_desa = tb_desa.kode_desa");
+        $this->db->where(array('nama_petani' => $this->input->post('nama_petani')));
+        $sql = $this->db->get("tb_petani")->row_array();
+        $q = $this->db->get_where('tb_usulan', array('id_petani' => $sql['id_petani']))->row_array();
+        if ($q != null) {
+            $sql = array_merge($sql, $q);
+            if ($sql != null) {
+                if ($sql['m1'] != null && $sql['m1'] != 'false') $sql['m1'] = unserialize(base64_decode($sql['m1']));
+                if ($sql['m2'] != null && $sql['m2'] != 'false') $sql['m2'] = unserialize(base64_decode($sql['m2']));
+                if ($sql['m3'] != null && $sql['m3'] != 'false') $sql['m3'] = unserialize(base64_decode($sql['m3']));
+                if ($sql['status_poktan'] != null && $sql['status_poktan'] != 'false') {
+                    $sql['status_poktan'] = unserialize(base64_decode($sql['status_poktan']));
+                }
+            }
+        }
+
+        $manager = new \Mesour\ArrayManager($sql['status_poktan']);
+        $select = $manager->select();
+
+        //set keys sensitive to TRUE (default is FALSE)
+        \Mesour\ArrayManage\Searcher\Condition::setKeysSensitive();
+
+        $select->column('*')->where('1', '2020', \Mesour\ArrayManage\Searcher\Condition::EQUAL)->limit(4);
+
+        print_r($select->fetch());
     }
 }

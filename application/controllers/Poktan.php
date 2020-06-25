@@ -52,10 +52,10 @@ class Poktan extends CI_Controller
             }
             $r['belum'] = $r['all'] - ($r['daftar'] + $r['tidak']);
 
-            if ($res->status_poktan != null) {
-                $sp = unserialize(base64_decode($res->status_poktan));
-                $search = $this->search($sp, array('m3','2020'));
-            }
+            // if ($res->status_poktan != null) {
+            //     $sp = unserialize(base64_decode($res->status_poktan));
+            //     $search = $this->search($sp, array('m3','2020'));
+            // }
         }
         echo json_encode($r);
     }
@@ -68,7 +68,6 @@ class Poktan extends CI_Controller
                     $sql = $this->db->get_where("tb_poktan", array('poktan' => $this->input->post('poktan')))->row();
                     $poktan = $sql->id_poktan;
                     $array = array(
-                        'id_desa' => $this->input->post('desa'),
                         'id_kelompok' => $poktan,
                         'nik' => $this->input->post('nik'),
                         'nama_petani' => $this->input->post('petani'),
@@ -103,16 +102,17 @@ class Poktan extends CI_Controller
                 if (isset($namePT)) {
                     $userPT = $this->input->post('petani');
                     if (isset($userPT)) {
-                        $rr = $this->db->select("*")->from("tb_petani")->join("tb_user", "tb_user.username = tb_petani.nama_petani")->where(array("nama_petani" => $userPT))->get()->row();
+                        $rr = $this->db->select("*")->from("tb_petani")
+                            ->join("tb_user", "tb_user.username = tb_petani.nama_petani")
+                            ->where(array("nama_petani" => $userPT))->get()->row();
                         if (isset($rr)) $r[] = $rr;
-                        // $r[] = $this->db->get()->row();
                     } else {
                         $sql = $this->db->get_where("tb_poktan", array('poktan' => $namePT))->row();
                         $poktan = $sql->id_poktan;
-                        echo json_encode($this->db->where(array('id_kelompok' => $poktan))->order_by('id_petani', 'DESC')->get('tb_petani')->result());
-                        // foreach ($result as $rr) {
-                        //     $r[] = $rr;
-                        // }
+                        echo json_encode($this->db
+                            ->where(array('id_kelompok' => $poktan))
+                            ->order_by('id_petani', 'DESC')
+                            ->get('tb_petani')->result());
                     }
                 } else {
                     $r['status'] = '0';
@@ -196,7 +196,7 @@ class Poktan extends CI_Controller
             foreach ($this->input->post('id') as $key) {
                 $sql = $this->db->get_where('tb_usulan', array('id_petani' => $key))->row('status_poktan');
                 $q = $this->db->get_where('tb_petani', array('id_petani' => $key))->row('tahap');
-                $push = array('true', $q, date("Y"));
+                $push = array('status' => 'true', 'tahap' => $q, 'tahun' => date("Y"));
                 $ar = array();
                 if ($sql != null) {
                     $ar = unserialize(base64_decode($sql));
@@ -220,8 +220,8 @@ class Poktan extends CI_Controller
     public function rekap()
     {
         $this->db->join("tb_usulan", "tb_petani.id_petani = tb_usulan.id_petani");
-        $this->db->join("tb_desa", "tb_petani.id_desa = tb_desa.kode_desa");
         $this->db->join('tb_poktan', 'tb_petani.id_kelompok = tb_poktan.id_poktan');
+        $this->db->join("tb_desa", "tb_poktan.id_desa = tb_desa.kode_desa");
         $this->db->where(array('poktan' => $this->input->post('poktan')));
         $sql = $this->db->get("tb_petani")->result();
         foreach ($sql as $s)
@@ -240,20 +240,4 @@ class Poktan extends CI_Controller
         // $sql->m1 = $x;
         echo json_encode($sql);
     }
-
-    function search($array, $search_list) { 
-  
-        // Create the result array 
-        $result = array(); 
-      
-        // Iterate over each search condition 
-        foreach ($search_list as $v) { 
-            $result[] = array_search($v, array_column($array));
-        }
-
-        // array_unique($result);
-      
-        // Return result  
-        return $result; 
-    } 
 }
