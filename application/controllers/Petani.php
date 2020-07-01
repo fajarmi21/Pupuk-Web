@@ -3,7 +3,6 @@ defined('BASEPATH') or exit('No direct script access allowed');
 define('VENDOR', substr(FCPATH, 0, strpos(APPPATH, 'application/')) . "vendor/");
 require VENDOR . 'autoload.php';
 
-
 class Petani extends CI_Controller
 {
     function __construct()
@@ -22,11 +21,44 @@ class Petani extends CI_Controller
         if ($q != null) {
             $sql = array_merge($sql, $q);
             if ($sql != null) {
-                if ($sql['m1'] != null && $sql['m1'] != 'false') $sql['m1'] = unserialize(base64_decode($sql['m1']));
-                if ($sql['m2'] != null && $sql['m2'] != 'false') $sql['m2'] = unserialize(base64_decode($sql['m2']));
-                if ($sql['m3'] != null && $sql['m3'] != 'false') $sql['m3'] = unserialize(base64_decode($sql['m3']));
+                if ($sql['m1'] != null && $sql['m1'] != 'false') {
+                    $sql['m1'] = unserialize(base64_decode($sql['m1']));
+
+                    $manager = new \Mesour\ArrayManager($sql['m1']);
+                    $select = $manager->select();
+                    $select->column('*', 'date')->orderBy('date', 'DESC');
+                    $sql['m1'] = $select->fetchAll();
+                }                
+                if ($sql['m2'] != null && $sql['m2'] != 'false') {
+                    $sql['m2'] = unserialize(base64_decode($sql['m2']));
+
+                    $manager = new \Mesour\ArrayManager($sql['m2']);
+                    $select = $manager->select();
+                    $select->column('*', 'date')->orderBy('date', 'DESC');
+                    $sql['m2'] = $select->fetchAll();
+                }                
+                if ($sql['m3'] != null && $sql['m3'] != 'false') {
+                    $sql['m3'] = unserialize(base64_decode($sql['m3']));
+
+                    $manager = new \Mesour\ArrayManager($sql['m3']);
+                    $select = $manager->select();
+                    $select->column('*', 'date')->orderBy('date', 'DESC');
+                    $sql['m3'] = $select->fetchAll();
+                }
+
                 if ($sql['status_poktan'] != null && $sql['status_poktan'] != 'false') {
                     $sql['status_poktan'] = unserialize(base64_decode($sql['status_poktan']));
+                }
+                if ($sql['status_admin'] != null) {
+                    $sql['status_admin'] = unserialize(base64_decode($sql['status_admin']));
+
+                    $manager = new \Mesour\ArrayManager($sql['status_admin']);
+                    $select = $manager->select();
+                    $select->column('*')
+                        ->where('tahun', date("Y"), \Mesour\ArrayManage\Searcher\Condition::EQUAL, 'and')
+                        ->where('tahap', $sql['tahap'], \Mesour\ArrayManage\Searcher\Condition::EQUAL, 'and');
+                    $sql['status_admin'] = $select->fetch();
+                    if ($sql['status_admin'] == false) $sql['status_admin'] = null;
                 }
             }
         }
@@ -52,23 +84,13 @@ class Petani extends CI_Controller
             $tahap = array();
             $thp = $this->input->post('tahap');
             if ($usul->$thp != null) {
-                // if ($usul->$thp == 'false') {
-                //     array_push($tahap, 'false');
-                //     array_push($tahap, $ar);
-                // } else {
-                //     array_push($tahap, unserialize(base64_decode($usul->$thp)));
-                //     array_push($tahap, $ar);
-                // }
                 $tahap = unserialize(base64_decode($usul->$thp));
                 array_push($tahap, $ar);
             } else {
                 array_push($tahap, $ar);
             }
             $input =  array(
-                $this->input->post('tahap') => base64_encode(serialize($tahap)),
-                'status_poktan' => null,
-                'status_ppl' => null,
-                'status_admin' => null,
+                $this->input->post('tahap') => base64_encode(serialize($tahap))
             );
             $this->db->update('tb_usulan', $input, array('id_petani' => $id->id_petani));
         } else {
@@ -177,35 +199,5 @@ class Petani extends CI_Controller
         // array_push($x, $sql->m1);
         // $sql->m1 = $x;
         echo json_encode($sql);
-    }
-
-    public function uji()
-    {
-        $this->db->join('tb_poktan', 'tb_petani.id_kelompok = tb_poktan.id_poktan');
-        $this->db->join("tb_desa", "tb_poktan.id_desa = tb_desa.kode_desa");
-        $this->db->where(array('nama_petani' => $this->input->post('nama_petani')));
-        $sql = $this->db->get("tb_petani")->row_array();
-        $q = $this->db->get_where('tb_usulan', array('id_petani' => $sql['id_petani']))->row_array();
-        if ($q != null) {
-            $sql = array_merge($sql, $q);
-            if ($sql != null) {
-                if ($sql['m1'] != null && $sql['m1'] != 'false') $sql['m1'] = unserialize(base64_decode($sql['m1']));
-                if ($sql['m2'] != null && $sql['m2'] != 'false') $sql['m2'] = unserialize(base64_decode($sql['m2']));
-                if ($sql['m3'] != null && $sql['m3'] != 'false') $sql['m3'] = unserialize(base64_decode($sql['m3']));
-                if ($sql['status_poktan'] != null && $sql['status_poktan'] != 'false') {
-                    $sql['status_poktan'] = unserialize(base64_decode($sql['status_poktan']));
-                }
-            }
-        }
-
-        $manager = new \Mesour\ArrayManager($sql['status_poktan']);
-        $select = $manager->select();
-
-        //set keys sensitive to TRUE (default is FALSE)
-        \Mesour\ArrayManage\Searcher\Condition::setKeysSensitive();
-
-        $select->column('*')->where('1', '2020', \Mesour\ArrayManage\Searcher\Condition::EQUAL)->limit(4);
-
-        print_r($select->fetch());
     }
 }

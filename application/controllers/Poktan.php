@@ -1,5 +1,7 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
+define('VENDOR', substr(FCPATH, 0, strpos(APPPATH, 'application/')) . "vendor/");
+require VENDOR . 'autoload.php';
 
 class Poktan extends CI_Controller
 {
@@ -23,6 +25,12 @@ class Poktan extends CI_Controller
         $r['za'] = 0;
         $r['npk'] = 0;
         $r['organik'] = 0;
+        $r['dluas'] = 0;
+        $r['durea'] = 0;
+        $r['dsp36'] = 0;
+        $r['dza'] = 0;
+        $r['dnpk'] = 0;
+        $r['dorganik'] = 0;
         $this->db->select('*')->from('tb_petani');
         $this->db->join('tb_usulan', 'tb_petani.id_petani = tb_usulan.id_petani');
         $result = $this->db->where(array('id_kelompok' => $poktan))->get()->result();
@@ -43,13 +51,38 @@ class Poktan extends CI_Controller
                     $r['npk'] += end($tahap)['npk'];
                     $r['organik'] += end($tahap)['organik'];
                 }
+
+                // if ($res->status_admin != null) {
+                //     $res->status_admin = unserialize(base64_decode($res->status_admin));
+                    
+                //     $manager = new \Mesour\ArrayManager($res->status_admin);
+                //     $select = $manager->select();
+                //     $select->column('*')
+                //         ->where('tahun', date("Y"), \Mesour\ArrayManage\Searcher\Condition::EQUAL, 'and')
+                //         ->where('tahap', $sql['tahap'], \Mesour\ArrayManage\Searcher\Condition::EQUAL, 'and');
+                //     $res->status_admin = $select->fetch();
+                // }
             }
-            if ($res->status_admin != null) {
-                $status = unserialize(base64_decode($res->status_admin));
-                $r['status'] = 'true';
-            } else {
-                $r['status'] = 'false';
-            }
+            // if ($res->status_admin != null) {
+            //     $res->status_admin = unserialize(base64_decode($res->status_admin));
+
+            //     $manager = new \Mesour\ArrayManager($res->status_admin);
+            //     $select = $manager->select();
+            //     $select->column('*')
+            //         ->where('tahun', date("Y"), \Mesour\ArrayManage\Searcher\Condition::EQUAL, 'and')
+            //         ->where('tahap', $sql['tahap'], \Mesour\ArrayManage\Searcher\Condition::EQUAL, 'and');
+            //     $res->status_admin = $select->fetch();
+
+                
+            //     $r['dluas'] += end($tahap)['luas'];
+            //     $r['durea'] += end($tahap)['urea'];
+            //     $r['dsp36'] += end($tahap)['sp36'];
+            //     $r['dza'] += end($tahap)['za'];
+            //     $r['dnpk'] += end($tahap)['npk'];
+            //     $r['dorganik'] += end($tahap)['organik'];
+
+            //     if ($res->status_admin == false) $res->status_admin = null;
+            // }
             $r['belum'] = $r['all'] - ($r['daftar'] + $r['tidak']);
 
             // if ($res->status_poktan != null) {
@@ -184,8 +217,43 @@ class Poktan extends CI_Controller
             
             if ($sql[$i]['status_poktan'] != null) {
                 $sql[$i]['status_poktan'] = unserialize(base64_decode($sql[$i]['status_poktan']));
+                $manager = new \Mesour\ArrayManager($sql[$i]['status_poktan']);
+                $select = $manager->select();
+                $select->column('*')
+                ->where('tahun', date('Y'), \Mesour\ArrayManage\Searcher\Condition::EQUAL, 'and')
+                ->where('tahap', $sql[$i]['tahap'], \Mesour\ArrayManage\Searcher\Condition::EQUAL);
+                $sql[$i]['status_poktan'] = $select->fetch();
+            }
+            if ($sql[$i]['status_ppl'] != null) {
+                $sql[$i]['status_ppl'] = unserialize(base64_decode($sql[$i]['status_ppl']));
+                $manager = new \Mesour\ArrayManager($sql[$i]['status_ppl']);
+                $select = $manager->select();
+                $select->column('*')
+                ->where('tahun', date('Y'), \Mesour\ArrayManage\Searcher\Condition::EQUAL, 'and')
+                ->where('tahap', $sql[$i]['tahap'], \Mesour\ArrayManage\Searcher\Condition::EQUAL);
+                $sql[$i]['status_ppl'] = $select->fetch();
+            }
+            if ($sql[$i]['status_admin'] != null) {
+                $sql[$i]['status_admin'] = unserialize(base64_decode($sql[$i]['status_admin']));
+                $manager = new \Mesour\ArrayManager($sql[$i]['status_admin']);
+                $select = $manager->select();
+                $select->column('*')
+                ->where('tahun', date('Y'), \Mesour\ArrayManage\Searcher\Condition::EQUAL, 'and')
+                ->where('tahap', $sql[$i]['tahap'], \Mesour\ArrayManage\Searcher\Condition::EQUAL);
+                $sql[$i]['status_admin'] = $select->fetch();
             }
         }
+        $manager = new \Mesour\ArrayManager($sql);
+        //set keys sensitive to TRUE (default is FALSE)
+        \Mesour\ArrayManage\Searcher\Condition::setKeysSensitive();
+
+        $select = $manager->select();
+        $select->column('*')
+        ->where('status_ppl', false, \Mesour\ArrayManage\Searcher\Condition::EQUAL, 'or')
+        ->where('status_ppl', null, \Mesour\ArrayManage\Searcher\Condition::EQUAL)
+        ->where('status_admin', false, \Mesour\ArrayManage\Searcher\Condition::EQUAL, 'or')
+        ->where('status_admin', null, \Mesour\ArrayManage\Searcher\Condition::EQUAL);
+        $sql = $select->fetchAll();
         echo json_encode($sql);
     }
 
