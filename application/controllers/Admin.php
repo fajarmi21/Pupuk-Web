@@ -10,7 +10,13 @@ class Admin extends CI_Controller
         parent::__construct();
         $this->load->database();
     }
+
     public function index()
+    {  
+		$this->load->view('v-home');
+    }
+
+    public function insert()
     {
         $this->db->trans_begin();
             $this->db->join("tb_usulan", "tb_petani.id_petani = tb_usulan.id_petani");
