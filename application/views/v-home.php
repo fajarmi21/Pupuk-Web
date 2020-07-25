@@ -9,6 +9,10 @@
     <title>Pupuk Web Master</title>
 
     <!-- CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+
+
     <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Roboto:400,100,300,500">
     <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
     <link rel="stylesheet" href="assets/font-awesome/css/font-awesome.min.css">
@@ -28,7 +32,6 @@
     <link rel="apple-touch-icon-precomposed" sizes="114x114" href="assets/ico/apple-touch-icon-114-precomposed.png">
     <link rel="apple-touch-icon-precomposed" sizes="72x72" href="assets/ico/apple-touch-icon-72-precomposed.png">
     <link rel="apple-touch-icon-precomposed" href="assets/ico/apple-touch-icon-57-precomposed.png">
-
 </head>
 
 <body>
@@ -60,56 +63,60 @@
                                 </div> -->
                         </div>
                         <div class="form-bottom">
-                            <form role="form" action="" method="post" class="login-form">
+                            <?php echo form_open(base_url().'tambah'); ?>
                                 <div class="form-group">
-                                    <label class="col-md-2 control-label" for="urea">Luas Lahan</label>
-                                    <div class="col-md-10">
-                                        <input type="text" name="urea" value="00" class="form-control input-md" id="urea" disabled>
+                                    <label class="col-md-3 control-label" for="luas">Luas Lahan</label>
+                                    <div class="col-md-9">
+                                        <input type="text" name="luas" class="form-control input-md" value="<?= $luas; ?>" id="luas" readonly>
                                         <span>&nbsp;</span>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-md-2 control-label" for="urea">Urea</label>
-                                    <div class="col-md-10">
-                                        <input type="text" name="urea" placeholder="Urea" class="form-control input-md" id="urea">
+                                    <label class="col-md-3 control-label" for="urea">Urea</label>
+                                    <div class="col-md-9">
+                                        <input type="text" name="urea" placeholder="Urea" class="form-control input-md" id="urea"
+                                        max="<?= $urea; ?>" min="0">
                                         <span>&nbsp;</span>
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-md-2 control-label" for="sp36">Sp36</label>
-                                    <div class="col-md-10">
-                                        <input type="text" name="sp36" placeholder="sp36" class="form-control input-md" id="sp36">
+                                    <label class="col-md-3 control-label" for="sp36">Sp36</label>
+                                    <div class="col-md-9">
+                                        <input type="text" name="sp36" placeholder="Sp36" class="form-control input-md" id="sp36"
+                                        max="<?= $sp36; ?>" min="0">
                                         <span>&nbsp;</span>
 
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-md-2 control-label" for="za">Za</label>
-                                    <div class="col-md-10">
-                                        <input type="text" name="za" placeholder="Za" class="form-control input-md" id="za">
+                                    <label class="col-md-3 control-label" for="za">Za</label>
+                                    <div class="col-md-9">
+                                        <input type="text" name="za" placeholder="Za" class="form-control input-md" id="za"
+                                        max="<?= $za; ?>" min="0">
                                         <span>&nbsp;</span>
 
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-md-2 control-label" for="npx">Npx</label>
-                                    <div class="col-md-10">
-                                        <input type="text" name="npx" placeholder="Npx" class="form-control input-md" id="npx">
+                                    <label class="col-md-3 control-label" for="npk">Npk</label>
+                                    <div class="col-md-9">
+                                        <input type="text" name="npk" placeholder="Npk" class="form-control input-md" id="npk"
+                                        max="<?= $npk; ?>" min="0">
                                         <span>&nbsp;</span>
 
                                     </div>
                                 </div>
                                 <div class="form-group">
-                                    <label class="col-md-2 control-label" for="organik">Organik</label>
-                                    <div class="col-md-10">
-                                        <input type="text" name="organik" placeholder="Organik" class="form-control input-md" id="organik">
+                                    <label class="col-md-3 control-label" for="organik">Organik</label>
+                                    <div class="col-md-9">
+                                        <input type="text" name="organik" placeholder="Organik" class="form-control input-md" id="organik"
+                                        max="<?= $organik; ?>" min="0">
                                         <span>&nbsp;</span>
-
                                     </div>
                                 </div>
                                 <button type="submit" class="btn btn-link-1 btn-link-1-facebook">Tambah</button>
 
-                            </form>
+                            <?php echo form_close(); ?>
                         </div>
                     </div>
                 </div>
@@ -121,6 +128,7 @@
 
     <!-- Javascript -->
     <script src="assets/js/jquery-1.11.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.inputmask/3.2.6/jquery.inputmask.bundle.min.js"></script>
     <script src="assets/bootstrap/js/bootstrap.min.js"></script>
     <script src="assets/js/jquery.backstretch.min.js"></script>
     <script src="assets/js/scripts.js"></script>
@@ -128,6 +136,86 @@
     <!--[if lt IE 10]>
             <script src="assets/js/placeholder.js"></script>
         <![endif]-->
+    <script>
+        // jQuery(function($){
+        //     $("#sp36").inputmask({
+        //         mask: "99[.99]",
+        //         greedy: false,
+        //         numericInput: true,
+        //         placeholder: '',
+        //         definitions: {
+        //         '*': {
+        //             validator: "[0-9]"
+        //         }
+        //         }
+        //     });
+        // });
+    </script>
+
+    <script>
+        $(function() {
+            $("#urea").change(function() {
+                var value = parseFloat(this.value);
+                var max = parseFloat(this.max);
+                var min = parseFloat(this.min);
+
+                if (value > max) {
+                    this.value = max;
+                    console.log(max)
+                } else if (value < min) {
+                    this.value = min
+                }
+            });
+            $("#sp36").change(function() {
+                var value = parseFloat(this.value);
+                var max = parseFloat(this.max);
+                var min = parseFloat(this.min);
+
+                if (value > max) {
+                    this.value = max;
+                    console.log(max)
+                } else if (value < min) {
+                    this.value = min
+                }
+            });
+            $("#za").change(function() {
+                var value = parseFloat(this.value);
+                var max = parseFloat(this.max);
+                var min = parseFloat(this.min);
+
+                if (value > max) {
+                    this.value = max;
+                    console.log(max)
+                } else if (value < min) {
+                    this.value = min
+                }
+            });
+            $("#npk").change(function() {
+                var value = parseFloat(this.value);
+                var max = parseFloat(this.max);
+                var min = parseFloat(this.min);
+
+                if (value > max) {
+                    this.value = max;
+                    console.log(max)
+                } else if (value < min) {
+                    this.value = min
+                }
+            });
+            $("#organik").change(function() {
+                var value = parseFloat(this.value);
+                var max = parseFloat(this.max);
+                var min = parseFloat(this.min);
+
+                if (value > max) {
+                    this.value = max;
+                    console.log(max)
+                } else if (value < min) {
+                    this.value = min
+                }
+            });
+        });
+    </script>
 
 </body>
 

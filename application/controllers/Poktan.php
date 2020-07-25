@@ -25,25 +25,20 @@ class Poktan extends CI_Controller
         $r['za'] = 0;
         $r['npk'] = 0;
         $r['organik'] = 0;
-        $r['dluas'] = 0;
-        $r['durea'] = 0;
-        $r['dsp36'] = 0;
-        $r['dza'] = 0;
-        $r['dnpk'] = 0;
-        $r['dorganik'] = 0;
+        $r['admin']['verifikasi']['urea'] = 0;
+        $r['admin']['verifikasi']['sp36'] = 0;
+        $r['admin']['verifikasi']['za'] = 0;
+        $r['admin']['verifikasi']['npk'] = 0;
+        $r['admin']['verifikasi']['organik'] = 0;
         $this->db->select('*')->from('tb_petani');
         $this->db->join('tb_usulan', 'tb_petani.id_petani = tb_usulan.id_petani');
-        $result = $this->db->where(array('id_kelompok' => $poktan))->get()->result();
+        $this->db->join('tb_tahap', 'tb_petani.tahap = tb_tahap.tahap');
+        $result = $this->db->where(array('id_kelompok' => $poktan))->get()->result_array();
+        $bulan = $this->db->select("tahap")->get_where('tb_tahap', array('bulan <=' => date('m')))->last_row();
         foreach ($result as $res) {
-            $thp = $res->tahap;
-            if ($res->$thp != null) {
-                $tahap = unserialize(base64_decode($res->$thp));
-                if (end($tahap) == 'false') {
-                    $r['daftar'] += 0;
-                    $r['tidak'] += 1;
-                } else {
-                    $r['daftar'] += 1;
-                    $r['tidak'] += 0;
+            if ($res[$bulan->tahap] != null) {
+                $tahap = unserialize(base64_decode($res[$bulan->tahap]));
+                if (end($tahap) != 'false') {
                     $r['luas'] += end($tahap)['luas'];
                     $r['urea'] += end($tahap)['urea'];
                     $r['sp36'] += end($tahap)['sp36'];
@@ -52,43 +47,39 @@ class Poktan extends CI_Controller
                     $r['organik'] += end($tahap)['organik'];
                 }
 
-                // if ($res->status_admin != null) {
-                //     $res->status_admin = unserialize(base64_decode($res->status_admin));
-                    
-                //     $manager = new \Mesour\ArrayManager($res->status_admin);
-                //     $select = $manager->select();
-                //     $select->column('*')
-                //         ->where('tahun', date("Y"), \Mesour\ArrayManage\Searcher\Condition::EQUAL, 'and')
-                //         ->where('tahap', $sql['tahap'], \Mesour\ArrayManage\Searcher\Condition::EQUAL, 'and');
-                //     $res->status_admin = $select->fetch();
-                // }
+                if ($res['status_poktan'] != null) {
+                    $poktan = unserialize(base64_decode($res['status_poktan']));
+                    $manager = new \Mesour\ArrayManager($poktan);
+                    $select = $manager->select();
+                    $poktan = $select->column('*')
+                        ->where('tahun', date("Y"), \Mesour\ArrayManage\Searcher\Condition::EQUAL, 'and')
+                        ->where('tahap', $res['tahap'], \Mesour\ArrayManage\Searcher\Condition::EQUAL, 'and')
+                        ->fetch();
+                    if ($poktan['status'] == 'true') {
+                        $r['daftar'] += 1;
+                    } else {
+                        $r['tidak'] += 1;
+                    }
+                } else {
+                    $r['belum'] += 1;
+                }
+
+                if ($res['status_admin'] != null) {
+                    $admin = unserialize(base64_decode($res['status_admin']));
+                    $manager = new \Mesour\ArrayManager($admin);
+                    $select = $manager->select();
+                    $select->column('*')
+                        ->where('tahun', date("Y"), \Mesour\ArrayManage\Searcher\Condition::EQUAL, 'and')
+                        ->where('tahap', $res['tahap'], \Mesour\ArrayManage\Searcher\Condition::EQUAL, 'and');
+                    $admin = $select->fetch();
+                    $r['admin']['verifikasi']['urea'] += $admin['verifikasi']['urea'];
+                    $r['admin']['verifikasi']['sp36'] += $admin['verifikasi']['sp36'];
+                    $r['admin']['verifikasi']['za'] += $admin['verifikasi']['za'];
+                    $r['admin']['verifikasi']['npk'] += $admin['verifikasi']['npk'];
+                    $r['admin']['verifikasi']['organik'] += $admin['verifikasi']['organik'];
+                }
             }
-            // if ($res->status_admin != null) {
-            //     $res->status_admin = unserialize(base64_decode($res->status_admin));
-
-            //     $manager = new \Mesour\ArrayManager($res->status_admin);
-            //     $select = $manager->select();
-            //     $select->column('*')
-            //         ->where('tahun', date("Y"), \Mesour\ArrayManage\Searcher\Condition::EQUAL, 'and')
-            //         ->where('tahap', $sql['tahap'], \Mesour\ArrayManage\Searcher\Condition::EQUAL, 'and');
-            //     $res->status_admin = $select->fetch();
-
-                
-            //     $r['dluas'] += end($tahap)['luas'];
-            //     $r['durea'] += end($tahap)['urea'];
-            //     $r['dsp36'] += end($tahap)['sp36'];
-            //     $r['dza'] += end($tahap)['za'];
-            //     $r['dnpk'] += end($tahap)['npk'];
-            //     $r['dorganik'] += end($tahap)['organik'];
-
-            //     if ($res->status_admin == false) $res->status_admin = null;
-            // }
-            $r['belum'] = $r['all'] - ($r['daftar'] + $r['tidak']);
-
-            // if ($res->status_poktan != null) {
-            //     $sp = unserialize(base64_decode($res->status_poktan));
-            //     $search = $this->search($sp, array('m3','2020'));
-            // }
+            // $r['belum'] = $r['all'] - ($r['daftar'] + $r['tidak']);
         }
         echo json_encode($r);
     }
@@ -136,8 +127,10 @@ class Poktan extends CI_Controller
                     $userPT = $this->input->post('petani');
                     if (isset($userPT)) {
                         $rr = $this->db->select("*")->from("tb_petani")
-                            ->join("tb_user", "tb_user.username = tb_petani.nama_petani")
-                            ->where(array("nama_petani" => $userPT))->get()->row();
+                            ->where(array("nama_petani" => $userPT))->get()->row_array();
+
+                        $email = $this->db->get_where("tb_user",array("username" => $userPT))->row("email");
+                        if(isset($email)) $rr['email'] = $email;
                         if (isset($rr)) $r[] = $rr;
                     } else {
                         $sql = $this->db->get_where("tb_poktan", array('poktan' => $namePT))->row();
@@ -167,7 +160,17 @@ class Poktan extends CI_Controller
                 $this->db->update('tb_petani', $data1, array('nama_petani' => $this->input->post('nama')));
 
                 # Updating data user
-                $this->db->update('tb_user', $data2, array('username' => $this->input->post('nama')));
+                if ($data2['email'] != "null") {
+                    $email = $this->db->get_where("tb_user",array("username" => $this->input->post('nama')))->row("email");
+                    if(isset($email)){
+                        $this->db->update('tb_user', $data2, array('username' => $this->input->post('nama')));
+                    } else {
+                        $data2["password"] = "user";
+                        $data2["level"] = "PETANI";
+                        $this->db->set($data2);
+                        $this->db->insert('tb_user');
+                    }
+                }
                 $this->db->trans_complete();
 
                 if ($this->db->trans_status() === TRUE) {
@@ -183,9 +186,9 @@ class Poktan extends CI_Controller
 
             case 'd':
                 $r['petani'] = $this->input->post('petani');
-                $d = $this->db->delete('tb_petani', array('nama_petani' => $this->input->post('petani')));
+                // $d = $this->db->delete('tb_petani', array('nama_petani' => $this->input->post('petani')));
                 $e = $this->db->delete('tb_user', array('username' => $this->input->post('petani')));
-                if ($d && $e) {
+                if ($e) {
                     $r['status'] = '1';
                     $r['message'] = 'delete successfully';
                 } else {
@@ -204,56 +207,49 @@ class Poktan extends CI_Controller
 
     public function usulan()
     {
+        $bulan = $this->db->select("tahap")->get_where('tb_tahap', array('bulan <=' => date('m')))->last_row();
         $this->db->select('*');
         $this->db->from('tb_petani');
         $this->db->join('tb_usulan', 'tb_petani.id_petani = tb_usulan.id_petani');
         $this->db->join('tb_poktan', 'tb_petani.id_kelompok = tb_poktan.id_poktan');
-        $this->db->where(Array('poktan' => $this->input->post('poktan')));
+        $this->db->join('tb_tahap', 'tb_petani.tahap = tb_tahap.tahap');
+        $this->db->where(Array('poktan' => $this->input->post('poktan'), 'tb_petani.tahap' => $bulan->tahap));
         $sql = $this->db->get()->result_array();
-        for ($i=0; $i < count($sql); $i++) {
-            if ($sql[$i]['m1'] != null && $sql[$i]['m1'] != 'false') $sql[$i]['m1'] = unserialize(base64_decode($sql[$i]['m1']));
-            if ($sql[$i]['m2'] != null && $sql[$i]['m2'] != 'false') $sql[$i]['m2'] = unserialize(base64_decode($sql[$i]['m2']));
-            if ($sql[$i]['m3'] != null && $sql[$i]['m3'] != 'false') $sql[$i]['m3'] = unserialize(base64_decode($sql[$i]['m3']));
-            
-            if ($sql[$i]['status_poktan'] != null) {
-                $sql[$i]['status_poktan'] = unserialize(base64_decode($sql[$i]['status_poktan']));
-                $manager = new \Mesour\ArrayManager($sql[$i]['status_poktan']);
-                $select = $manager->select();
-                $select->column('*')
-                ->where('tahun', date('Y'), \Mesour\ArrayManage\Searcher\Condition::EQUAL, 'and')
-                ->where('tahap', $sql[$i]['tahap'], \Mesour\ArrayManage\Searcher\Condition::EQUAL);
-                $sql[$i]['status_poktan'] = $select->fetch();
-            }
-            if ($sql[$i]['status_ppl'] != null) {
-                $sql[$i]['status_ppl'] = unserialize(base64_decode($sql[$i]['status_ppl']));
-                $manager = new \Mesour\ArrayManager($sql[$i]['status_ppl']);
-                $select = $manager->select();
-                $select->column('*')
-                ->where('tahun', date('Y'), \Mesour\ArrayManage\Searcher\Condition::EQUAL, 'and')
-                ->where('tahap', $sql[$i]['tahap'], \Mesour\ArrayManage\Searcher\Condition::EQUAL);
-                $sql[$i]['status_ppl'] = $select->fetch();
-            }
-            if ($sql[$i]['status_admin'] != null) {
-                $sql[$i]['status_admin'] = unserialize(base64_decode($sql[$i]['status_admin']));
-                $manager = new \Mesour\ArrayManager($sql[$i]['status_admin']);
-                $select = $manager->select();
-                $select->column('*')
-                ->where('tahun', date('Y'), \Mesour\ArrayManage\Searcher\Condition::EQUAL, 'and')
-                ->where('tahap', $sql[$i]['tahap'], \Mesour\ArrayManage\Searcher\Condition::EQUAL);
-                $sql[$i]['status_admin'] = $select->fetch();
+        foreach ($sql as $s => $v) {
+            if ($v[$bulan->tahap] != null) {
+                if ($v['m1'] != null) $sql[$s]['m1'] = unserialize(base64_decode($v['m1']));
+                if ($v['m2'] != null) $sql[$s]['m2'] = unserialize(base64_decode($v['m2']));
+                if ($v['m3'] != null) $sql[$s]['m3'] = unserialize(base64_decode($v['m3']));
+                
+                if ($v['status_poktan'] != null) {
+                    $v['status_poktan'] = unserialize(base64_decode($v['status_poktan']));
+                    $manager = new \Mesour\ArrayManager($v['status_poktan']);
+                    $select = $manager->select();
+                    $select->column('*')
+                    ->where('tahun', date('Y'), \Mesour\ArrayManage\Searcher\Condition::EQUAL, 'and')
+                    ->where('tahap', $v['tahap'], \Mesour\ArrayManage\Searcher\Condition::EQUAL);
+                    $sql[$s]['status_poktan'] = $select->fetch();
+                }
+                if ($v['status_ppl'] != null) {
+                    $v['status_ppl'] = unserialize(base64_decode($v['status_ppl']));
+                    $manager = new \Mesour\ArrayManager($v['status_ppl']);
+                    $select = $manager->select();
+                    $select->column('*')
+                    ->where('tahun', date('Y'), \Mesour\ArrayManage\Searcher\Condition::EQUAL, 'and')
+                    ->where('tahap', $v['tahap'], \Mesour\ArrayManage\Searcher\Condition::EQUAL);
+                    $sql[$s]['status_ppl'] = $select->fetch();
+                }
+                if ($v['status_admin'] != null) {
+                    $v['status_admin'] = unserialize(base64_decode($v['status_admin']));
+                    $manager = new \Mesour\ArrayManager($v['status_admin']);
+                    $select = $manager->select();
+                    $select->column('*')
+                    ->where('tahun', date('Y'), \Mesour\ArrayManage\Searcher\Condition::EQUAL, 'and')
+                    ->where('tahap', $v['tahap'], \Mesour\ArrayManage\Searcher\Condition::EQUAL);
+                    $sql[$s]['status_admin'] = $select->fetch();
+                }
             }
         }
-        $manager = new \Mesour\ArrayManager($sql);
-        //set keys sensitive to TRUE (default is FALSE)
-        \Mesour\ArrayManage\Searcher\Condition::setKeysSensitive();
-
-        $select = $manager->select();
-        $select->column('*')
-        ->where('status_ppl', false, \Mesour\ArrayManage\Searcher\Condition::EQUAL, 'or')
-        ->where('status_ppl', null, \Mesour\ArrayManage\Searcher\Condition::EQUAL)
-        ->where('status_admin', false, \Mesour\ArrayManage\Searcher\Condition::EQUAL, 'or')
-        ->where('status_admin', null, \Mesour\ArrayManage\Searcher\Condition::EQUAL);
-        $sql = $select->fetchAll();
         echo json_encode($sql);
     }
 
@@ -285,6 +281,31 @@ class Poktan extends CI_Controller
         echo json_encode($r);
     }
 
+    public function usulanT()
+    {
+        $this->db->trans_begin();
+            $sql = $this->db->get_where('tb_usulan', array('id_petani' => $this->input->post('id')))->row('status_poktan');
+            $q = $this->db->get_where('tb_petani', array('id_petani' => $this->input->post('id')))->row('tahap');
+            $push = array('status' => 'false', 'alasan' => $this->input->post('alasan'), 'tahap' => $q, 'tahun' => date("Y"));
+            $ar = array();
+            if ($sql != null) {
+                $ar = unserialize(base64_decode($sql));
+            }
+            array_push($ar, $push);
+            $this->db->update('tb_usulan', array('status_poktan' => base64_encode(serialize($ar))), array('id_petani' => $this->input->post('id')));
+        $this->db->trans_complete();
+        if ($this->db->trans_status() === TRUE) {
+            $this->db->trans_commit();
+            $r['status'] = '1';
+            $r['message'] = 'update successfully';
+        } else {
+            $this->db->trans_rollback();
+            $r['status'] = '0';
+            $r['message'] = 'update unsuccessfully';
+        }
+        echo json_encode($r);
+    }
+
     public function rekap()
     {
         $this->db->join("tb_usulan", "tb_petani.id_petani = tb_usulan.id_petani");
@@ -302,10 +323,6 @@ class Poktan extends CI_Controller
             if ($s->status_ppl != null && $s->status_ppl != 'false') $s->status_ppl = unserialize(base64_decode($s->status_ppl));
             if ($s->status_admin != null && $s->status_admin != 'false') $s->status_admin = unserialize(base64_decode($s->status_admin));
         }
-        // $x = array();
-        // array_push($sql->m1, 'false');
-        // array_push($x, $sql->m1);
-        // $sql->m1 = $x;
         echo json_encode($sql);
     }
 }

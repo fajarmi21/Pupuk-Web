@@ -10,6 +10,7 @@ class Petani extends CI_Controller
         parent::__construct();
         $this->load->database();
     }
+
     public function index()
     {
         // $this->db->join("tb_usulan", "tb_petani.id_petani = tb_usulan.id_petani");
@@ -48,6 +49,25 @@ class Petani extends CI_Controller
 
                 if ($sql['status_poktan'] != null && $sql['status_poktan'] != 'false') {
                     $sql['status_poktan'] = unserialize(base64_decode($sql['status_poktan']));
+
+                    $manager = new \Mesour\ArrayManager($sql['status_poktan']);
+                    $select = $manager->select();
+                    $select->column('*')
+                        ->where('tahun', date("Y"), \Mesour\ArrayManage\Searcher\Condition::EQUAL, 'and')
+                        ->where('tahap', $sql['tahap'], \Mesour\ArrayManage\Searcher\Condition::EQUAL, 'and');
+                    $sql['status_poktan'] = $select->fetch();
+                    if ($sql['status_poktan'] == false) $sql['status_poktan'] = null;
+                }
+                if ($sql['status_ppl'] != null && $sql['status_ppl'] != 'false') {
+                    $sql['status_ppl'] = unserialize(base64_decode($sql['status_ppl']));
+
+                    $manager = new \Mesour\ArrayManager($sql['status_ppl']);
+                    $select = $manager->select();
+                    $select->column('*')
+                        ->where('tahun', date("Y"), \Mesour\ArrayManage\Searcher\Condition::EQUAL, 'and')
+                        ->where('tahap', $sql['tahap'], \Mesour\ArrayManage\Searcher\Condition::EQUAL, 'and');
+                    $sql['status_ppl'] = $select->fetch();
+                    if ($sql['status_ppl'] == false) $sql['status_ppl'] = null;
                 }
                 if ($sql['status_admin'] != null) {
                     $sql['status_admin'] = unserialize(base64_decode($sql['status_admin']));
@@ -63,6 +83,11 @@ class Petani extends CI_Controller
             }
         }
         echo json_encode($sql);
+    }
+
+    public function tahap()
+    {
+        echo json_encode($this->db->get('tb_tahap')->result());
     }
 
     public function usulan()
@@ -165,7 +190,63 @@ class Petani extends CI_Controller
         $tahap = unserialize(base64_decode($usul->$thp));
         $x = array_search($this->input->post('dateF'), array_column($tahap, 'date'));
         $tahap[$x] = $arF;
-        $this->db->update('tb_usulan', array($thp => base64_encode(serialize($tahap))), array('id_petani' => $id->id_petani));
+
+        if ($usul->status_poktan != null) {
+            $status_poktan = unserialize(base64_decode($usul->status_poktan));
+            $manager = new \Mesour\ArrayManager($status_poktan);
+            $manager->delete()
+                ->where('tahun', date('Y'), \Mesour\ArrayManage\Searcher\Condition::EQUAL, 'and')
+                ->where('tahap', $thp, \Mesour\ArrayManage\Searcher\Condition::EQUAL)
+                ->execute();
+            if ($status_poktan != null) {
+                $status_poktan = base64_encode(serialize($status_poktan));
+            } else {
+                $status_poktan = null;
+            }
+        } else {
+            $status_poktan = null;
+        }
+
+        if ($usul->status_ppl != null) {
+            $status_ppl = unserialize(base64_decode($usul->status_ppl));
+            $manager = new \Mesour\ArrayManager($status_ppl);
+            $manager->delete()
+                ->where('tahun', date('Y'), \Mesour\ArrayManage\Searcher\Condition::EQUAL, 'and')
+                ->where('tahap', $thp, \Mesour\ArrayManage\Searcher\Condition::EQUAL)
+                ->execute();
+            if ($status_ppl != null) {
+                $status_ppl = base64_encode(serialize($status_ppl));
+            } else {
+                $status_ppl = null;
+            }
+        } else {
+            $status_ppl = null;
+        }
+
+        if ($usul->status_admin != null) {
+            $status_admin = unserialize(base64_decode($usul->status_admin));
+            $manager = new \Mesour\ArrayManager($status_admin);
+            $manager->delete()
+                ->where('tahun', date('Y'), \Mesour\ArrayManage\Searcher\Condition::EQUAL, 'and')
+                ->where('tahap', $thp, \Mesour\ArrayManage\Searcher\Condition::EQUAL)
+                ->execute();
+            if ($status_admin != null) {
+                $status_admin = base64_encode(serialize($status_admin));
+            } else {
+                $status_admin = null;
+            }
+        } else {
+            $status_admin = null;
+        }
+
+        $data = array(
+            $thp => base64_encode(serialize($tahap)),
+            'status_poktan' => $status_poktan,
+            'status_ppl' => $status_ppl,
+            'status_admin' => $status_admin,
+        );
+
+        $this->db->update('tb_usulan', $data, array('id_petani' => $id->id_petani));
         $this->db->trans_complete();
         if ($this->db->trans_status() === TRUE) {
             $this->db->trans_commit();
